@@ -1,0 +1,4 @@
+pre	myope	no	normal	(soft)
+pre	myope	no	reduced	(no lenses)
+presbyopic	myope	yes	normal	(hard)
+1	2	3	4	(Unknown.)

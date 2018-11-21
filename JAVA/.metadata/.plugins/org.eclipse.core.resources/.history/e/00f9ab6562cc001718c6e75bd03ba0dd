@@ -1,0 +1,57 @@
+/**
+ * 
+ * @author AlexDerain
+ *
+ *	Contains a actual movie screening and an ID
+ */
+public class Ticket{
+
+	private MovieScreening movieScreening; //Each ticket represents one exact movie screening
+	private int ticketId; //Each ticket has an ID
+	private boolean popcorn; //Each ticket can get free popcorn only once
+	private boolean taken; //To check if this ticket is sold and using or not
+
+	public Ticket(MovieScreening movieScreening, int ticketId){
+		this.movieScreening = movieScreening;
+		this.ticketId = ticketId;
+		this.popcorn = true;
+	}
+	
+	public MovieScreening getMovieScreening() {
+		return movieScreening;
+	}
+
+	public void setMovieScreening(MovieScreening movieScreening) {
+		this.movieScreening = movieScreening;
+	}
+	
+	public int getTicketId() {
+		return ticketId;
+	}
+	
+	public void ticketSold(){
+		movieScreening.ticketSold();
+	}
+
+	/**
+	 * When a ticket is canceled, a seat is spear again
+	 */
+	public void ticketCanceled(){
+		movieScreening.ticketCanceled();
+	}
+	
+	/**
+	 * When a ticket get a free popcorn, it cannot get this twice
+	 */
+	public void getFreePopcorn(){
+		popcorn = false;
+	}
+
+	public String toString(){
+		String s = "Title: " +  movieScreening.getTitle() + '\n' + 
+				"Time of Screening: " + movieScreening.getScreeningTime() + '\n' + 
+				"Length: " + movieScreening.getLength() + '\n' + 
+				"Room: " + movieScreening.getRoom().getNumber();
+		return s;
+	}
+}

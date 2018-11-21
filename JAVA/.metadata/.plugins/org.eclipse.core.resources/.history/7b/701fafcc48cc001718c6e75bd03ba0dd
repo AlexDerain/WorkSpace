@@ -1,0 +1,76 @@
+/**
+ * 
+ * @author AlexDerain
+ *
+ *	Contains screening time, a movie and screening room
+ */
+public class MovieScreening{
+
+	private int screeningTime; //Time of screening of the movie
+	private Movie movie; //Movie on screening
+	private Room room; //Screening room
+	private int vacantSeat; //Number of vacant seats of a screening movie
+	private int screeningId; //Each screening movie has a unique ID, for identifying waiting list
+	
+	public MovieScreening(Movie movie, int screeningTime, Room room){
+		this.movie = movie;
+		this.screeningTime = screeningTime;
+		this.room = room;
+		this.vacantSeat = room.getSeats();
+	}
+	
+	public Movie getMovie(){
+		return movie;
+	}
+	
+	public int getScreeningTime() {
+		return screeningTime;
+	}
+
+	public void setScreeningTime(int screeningTime) {
+		this.screeningTime = screeningTime;
+	}
+
+	public void setMovie(Movie movie) {
+		this.movie = movie;
+	}
+
+	public void setRoom(Room room) {
+		this.room = room;
+	}
+
+	public String getTitle(){
+		return movie.getTitle();
+	}
+	
+	public int getLength(){
+		return movie.getLength();
+	}
+	
+	public Room getRoom(){
+		return room;
+	}
+	
+	public int getVacantSeat(){
+		return vacantSeat;
+	}
+	
+	public int getScreeningId(){
+		return screeningId;
+	}
+	
+	public void ticketSold(){
+		vacantSeat--;
+	}
+	
+	public void ticketCanceled(){
+		vacantSeat++;
+	}
+	
+	public String toString(){
+		String s = "Title: " + movie.getTitle() + '\n' + 
+				"Screening Time: " + screeningTime + '\n' + 
+				"Room: " + room.getNumber();
+		return s;
+	}
+}

@@ -1,0 +1,283 @@
+import java.util.Scanner;
+
+import Vector.*;
+
+/**
+ * 
+ * @author AlexDerain
+ *
+ *	Initialize of cinema
+ */
+public class Cinema implements ICinema {
+
+	private Vector rooms;	//Vector of rooms
+	private Vector movies;	//Vector of movies
+	private Vector movieScreenings;	//Vector of movie screenings
+	private Vector tickets;	//Vector of tickets
+	private Vector waitingList;	//Waiting list
+	private int ticketId;	//Each ticket ID will be used only once
+	private int soldTickets;	//Count for sold tickets
+	private int screeningId; //Each screening movie has a unique ID, for identifying waiting list
+	
+	public Cinema(){
+		movies = new Vector(1000);
+		rooms = new Vector(1000);
+		movieScreenings = new Vector(1000);
+		tickets = new Vector(1000);
+		waitingList = new Vector(1000);
+		ticketId = 0;
+		soldTickets = 0;
+		screeningId = 0;
+	}
+	
+	/**
+	 * When buyTicket returns -1, ask for the name of the customer and add him to the waiting list
+	 */
+	private void waiting(MovieScreening waitingScreeningMovie, int screeningTime){
+			System.out.println("Sorry, but the room is full, we will put you in the waiting list.");
+			System.out.println("Would you like to leave your name?");
+			Scanner s = new Scanner(System.in);
+			String name = s.next();
+			getOnWaitingList(waitingScreeningMovie.getTitle(), screeningTime, name);
+			System.out.println("Thank you " + name + ", you are on the waiting list now.");
+	}
+	
+	@Override
+	public void addMovie(String title, int length){
+		/**
+		 * If the movie already exists, throw an exception
+		 */
+		boolean flag = false;
+		for (int i = 0; i < movies.size(); i++){
+			if(title.equals(((Movie) movies.get(i)).getTitle())){
+				System.out.println("This movie already exists!");
+				flag = true;
+				break;
+			}
+		}
+		//Testing out print
+		if(!flag){
+			Movie newMovie = new Movie(title, length);
+			movies.addLast(newMovie);
+			System.out.println("Addition succeed!");
+		}
+	}
+
+	@Override
+	public void addRoom(int number, int seats){
+		/**
+		 * If the room already exists, throw an exception
+		 */
+		boolean flag = false;
+		for (int i = 0; i < rooms.size(); i++){
+			if(number == ((Room) rooms.get(i)).getNumber()){
+				System.out.println("This room already exists!");
+				flag = true;
+				break;
+			}
+		}
+		//Testing out print
+		if(!flag){
+			Room newRoom = new Room(number, seats);
+			rooms.addLast(newRoom);
+			System.out.println("Addition succeed!");
+		}
+	}
+
+	@Override
+	public void addScreening(String movieTitle, int screeningTime, int roomNumber){
+		/**
+		 * If the movie or room does not exist, throw an exception
+		 */
+		boolean flag1 = false;
+		boolean flag2 = false;
+		int index1 = 0, index2 = 0;
+		for(int i = 0; i < movies.size(); i++){
+			if(movieTitle.equals(((Movie) movies.get(i)).getTitle())){
+				flag1 = true;
+				index1 = i;
+			}
+		}
+		if(!flag1){
+			System.out.println("This movie does not exist!");
+		}
+		for(int i = 0; i < rooms.size(); i++){
+			if(roomNumber == ((Room) rooms.get(i)).getNumber()){
+				flag2 = true;
+				index2 = i;
+			}
+		}
+		if(!flag2){
+			System.out.println("This room does not exist!");
+		}
+		
+		for(int i = 0; i < movieScreenings.size(); i++){
+			if(movieTitle.equals(((MovieScreening)movieScreenings.get(i)).getTitle()) && roomNumber == ((MovieScreening)movieScreenings.get(i)).getRoom().getNumber()){
+				if((screeningTime > ((MovieScreening)movieScreenings.get(i)).getScreeningTime() && 
+						screeningTime < (((MovieScreening)movieScreenings.get(i)).getScreeningTime() + ((MovieScreening)movieScreenings.get(i)).getLength())) ||
+						((screeningTime + ((MovieScreening)movieScreenings.get(i)).getLength()) > ((MovieScreening)movieScreenings.get(i)).getScreeningTime() &&
+								screeningTime <= ((MovieScreening)movieScreenings.get(i)).getScreeningTime())){
+					flag1 = false;
+					System.out.println("Time overlap! Screening movie addition fails!");
+					break;
+				}
+			}
+		}
+		
+		if(flag1 && flag2){
+			MovieScreening newMovieScreening = new MovieScreening(((Movie) movies.get(index1)), screeningTime, ((Room) rooms.get(index2)));
+			movieScreenings.addLast(newMovieScreening);
+			//Testing out print
+			System.out.println("Addition succeed!");
+		}
+	}
+
+	@Override
+	public int buyTicket(String movieTitle, int screeningTime){
+		/**
+		 * If the screening does not exist, throw an exception
+		 */
+		boolean flag = false;
+		int index = 0;
+		for(int i = 0; i < movieScreenings.size(); i++){
+			if(movieTitle.equals(((MovieScreening) movieScreenings.get(i)).getTitle()) && screeningTime == ((MovieScreening) movieScreenings.get(i)).getScreeningTime()){
+				flag = true;
+				index = i;
+			}
+		}
+		if(!flag){
+			System.out.println("This screening movie does not exist!");
+		}
+		
+		/**
+		 * If there're still spear seats in the screening room, sell a ticket and give it an ID
+		 * Otherwise return -1
+		 */
+		if(flag){
+			if(((MovieScreening) movieScreenings.get(index)).getVacantSeat() > 0){
+				ticketId++;
+				Ticket newTicket = new Ticket((MovieScreening) movieScreenings.get(index), ticketId);
+				tickets.addLast(newTicket);
+				newTicket.ticketSold();
+				soldTickets++;
+				return ticketId;
+			}
+			else{
+				((MovieScreening)movieScreenings.get(index)).setScreeningId(screeningId);
+				screeningId++;
+				MovieScreening waitingScreeningMovie = (MovieScreening)movieScreenings.get(index);
+				//waitingList.addLast(waitingScreeningMovie);
+				waiting(waitingScreeningMovie, screeningTime);
+				return -1;
+			}
+		}
+		else{
+			return 0;
+		}
+		
+	}
+
+	@Override
+	public void cancelTicket(int ticketId){
+		
+		/**
+		 * If the ID does not exist, throw an exception
+		 */
+		boolean flag = false;
+		if(ticketId > this.ticketId){
+			System.out.println("This ticket does not exist!");
+			flag = true;
+		}
+		/**
+		 * Cancel the ticket, release a seat, and inform the first customer of this screening on the waiting list
+		 */
+		else{
+			/**
+			 * Logic: If a ticket is canceled while there's people on the waiting list, then give him/her this ticket. Otherwise just throw this ticket.
+			 */
+			for(int i = 0; i < tickets.size(); i++){
+				if(ticketId == ((Ticket) tickets.get(i)).getTicketId()){
+					((Ticket) tickets.get(i)).ticketCanceled();
+					LinkedListQueue waitings = (LinkedListQueue)waitingList.get(((Ticket) tickets.get(i)).getMovieScreening().getScreeningId());
+					if(!waitings.isEmpty()){
+						System.out.println("Dear " + (String)waitings.top() + ", now your get your ticket, the ticketID is " + ticketId);
+						waitings.pop();
+						((Ticket) tickets.get(i)).ticketSold();
+					}
+					else{
+						System.out.println("Nobody on the waiting list, this ticket is deleted.");
+					}
+					break;
+				}
+			}
+		}
+		
+		//Testing print
+		if(!flag){
+			System.out.println("Cancel succeed!");
+		}
+	}
+
+	@Override
+	public void getOnWaitingList(String movieTitle, int screeningTime, String customerName) {
+		/**
+		 * Save the information of the screening movie, and add the customer to the waiting list
+		 */
+		for(int i = 0; i < movieScreenings.size(); i++){
+			if(movieTitle.equals(((MovieScreening) movieScreenings.get(i)).getTitle()) && screeningTime == ((MovieScreening) movieScreenings.get(i)).getScreeningTime()){
+				MovieScreening waitingScreeningMovie = (MovieScreening)movieScreenings.get(i);
+				if(waitingList.get(waitingScreeningMovie.getScreeningId()) == null){
+					LinkedListQueue waitings = new LinkedListQueue();
+					waitings.push(customerName);
+					waitingList.addLast(waitings);
+				}
+				else{
+					((LinkedListQueue)waitingList.get(waitingScreeningMovie.getScreeningId())).push(customerName);
+				}
+				break;
+			}
+		}
+	}
+
+	@Override
+	public int getSoldTicketCount() {
+		return soldTickets;
+	}
+
+	@Override
+	public void printAllScreenings() {
+		for(int i = 0; i < movieScreenings.size(); i++){
+			System.out.println(((MovieScreening) movieScreenings.get(i)).toString());
+		}
+
+	}
+
+	@Override
+	public void printWaitingList(String movieTitle, int screeningTime){
+		/**
+		 * Just print all customer that wait for a specific screening movie
+		 * If the movie does not exist, throw an exception
+		 */
+		boolean flag = false; 
+		for(int i = 0; i < waitingList.size(); i++){
+			if(movieTitle.equals(((MovieScreening) movieScreenings.get(i)).getTitle()) && screeningTime == ((MovieScreening) movieScreenings.get(i)).getScreeningTime()){
+				flag = true;
+				MovieScreening printScreening = (MovieScreening) movieScreenings.get(i);
+				if(printScreening.getScreeningId() == -1){
+					System.out.println("This screening movie does not have a waiting list!");
+				}
+				LinkedListQueue printList = (LinkedListQueue)waitingList.get(printScreening.getScreeningId());
+				if(printList.isEmpty()){
+					System.out.println("This screening movie does not have a waiting list!");
+				}
+				else{
+					printList.print();
+				}
+			}
+		}
+		if(!flag){
+			System.out.println("This screening movie does not exist!");
+		}
+	}
+
+}
